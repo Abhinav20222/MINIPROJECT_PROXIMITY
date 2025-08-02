@@ -8,7 +8,7 @@ import 'package:offgrid/storage/sqlite_service.dart';
 import 'package:offgrid/utils/app_state.dart';
 import 'package:provider/provider.dart';
 import 'dart:convert';
-
+a
 class ChatScreen extends StatefulWidget {
   final String peerId;
   final String peerName;
