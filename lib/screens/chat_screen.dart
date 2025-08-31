@@ -50,7 +50,7 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   void _subscribeToServiceEvents() {
-    // The "if (appState.mode == AppMode.offline)" check is no longer needed here.
+ 
     
     appState.nearbyService?.onTypingStatusChanged = (status) {
       if (mounted && status['endpointId'] == widget.peerId) {

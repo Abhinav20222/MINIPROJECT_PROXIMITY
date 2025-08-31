@@ -1,4 +1,4 @@
-package com.example.offgrid // Your correct package name
+package com.example.offgrid
 
 import androidx.annotation.NonNull
 import io.flutter.embedding.android.FlutterActivity
@@ -15,8 +15,10 @@ class MainActivity: FlutterActivity() {
     private val SERVICE_ID = "com.example.offgrid.service"
 
     private var myUsername: String = "User-${(1000..9999).random()}"
-    private var connectedEndpointId: String? = null
-    
+    // --- New map to store endpoint names ---
+    private val discoveredEndpointNames = mutableMapOf<String, String>()
+    // -------------------------------------
+
     private val TYPING_STATUS_START = "__typing_start__"
     private val TYPING_STATUS_STOP = "__typing_stop__"
     private val READ_RECEIPT_PREFIX = "__read__"
@@ -52,7 +54,6 @@ class MainActivity: FlutterActivity() {
                     val message = call.argument<String>("message")
                     val endpointId = call.argument<String>("endpointId")
                     if (message != null && endpointId != null) {
-                        println(">>> SENDING PAYLOAD to $endpointId")
                         val payload = Payload.fromBytes(message.toByteArray(Charsets.UTF_8))
                         connectionsClient.sendPayload(endpointId, payload)
                         result.success("Message sent.")
@@ -69,44 +70,44 @@ class MainActivity: FlutterActivity() {
         }
     }
 
-    // --- THIS FUNCTION HAS BEEN SIMPLIFIED ---
     private fun startDiscovery() {
         val options = DiscoveryOptions.Builder().setStrategy(STRATEGY).build()
         connectionsClient.startDiscovery(SERVICE_ID, endpointDiscoveryCallback, options)
             .addOnSuccessListener { println(">>> Discovery started") }
-            .addOnFailureListener { e -> 
-                // We no longer send the failure to Flutter, just log it.
-                println(">>> Discovery failed: $e")
-            }
+            .addOnFailureListener { e -> println(">>> Discovery failed: $e") }
     }
 
-    // --- THIS FUNCTION HAS BEEN SIMPLIFIED ---
     private fun startAdvertising() {
         val options = AdvertisingOptions.Builder().setStrategy(STRATEGY).build()
         connectionsClient.startAdvertising(myUsername, SERVICE_ID, connectionLifecycleCallback, options)
             .addOnSuccessListener { println(">>> Advertising started") }
-            .addOnFailureListener { e -> 
-                // We no longer send the failure to Flutter, just log it.
-                println(">>> Advertising failed: $e")
-            }
+            .addOnFailureListener { e -> println(">>> Advertising failed: $e") }
     }
 
-    // ... (the rest of the file is unchanged)
+    // --- THIS CALLBACK IS UPDATED ---
     private val endpointDiscoveryCallback = object : EndpointDiscoveryCallback() {
         override fun onEndpointFound(endpointId: String, info: DiscoveredEndpointInfo) {
+            // Store the name when an endpoint is found
+            discoveredEndpointNames[endpointId] = info.endpointName
             val endpoint = mapOf("id" to endpointId, "name" to info.endpointName)
             runOnUiThread {
                 channel.invokeMethod("onEndpointFound", endpoint)
             }
         }
         override fun onEndpointLost(endpointId: String) {
+            // Remove the name when an endpoint is lost
+            discoveredEndpointNames.remove(endpointId)
             runOnUiThread {
                 channel.invokeMethod("onEndpointLost", endpointId)
             }
         }
     }
+    
+    // --- THIS CALLBACK IS UPDATED ---
     private val connectionLifecycleCallback = object : ConnectionLifecycleCallback() {
         override fun onConnectionInitiated(endpointId: String, connectionInfo: ConnectionInfo) {
+            // Store the name when a connection is initiated (important for the advertiser)
+            discoveredEndpointNames[endpointId] = connectionInfo.endpointName
             connectionsClient.acceptConnection(endpointId, payloadCallback)
         }
         override fun onConnectionResult(endpointId: String, result: ConnectionResolution) {
@@ -114,9 +115,10 @@ class MainActivity: FlutterActivity() {
                 ConnectionsStatusCodes.STATUS_OK -> {
                     connectionsClient.stopDiscovery()
                     connectionsClient.stopAdvertising()
-                    connectedEndpointId = endpointId
+                    // Now we can reliably get the name from our map
+                    val endpointName = discoveredEndpointNames[endpointId] ?: "Unknown Device"
                     runOnUiThread {
-                        channel.invokeMethod("onConnectionResult", mapOf("endpointId" to endpointId, "status" to "connected"))
+                        channel.invokeMethod("onConnectionResult", mapOf("endpointId" to endpointId, "endpointName" to endpointName, "status" to "connected"))
                     }
                 }
                 ConnectionsStatusCodes.STATUS_CONNECTION_REJECTED -> {
@@ -133,12 +135,12 @@ class MainActivity: FlutterActivity() {
             }
         }
         override fun onDisconnected(endpointId: String) {
-            connectedEndpointId = null
              runOnUiThread {
                 channel.invokeMethod("onDisconnected", endpointId)
             }
         }
     }
+    
     private val payloadCallback = object : PayloadCallback() {
         override fun onPayloadReceived(endpointId: String, payload: Payload) {
             if (payload.type == Payload.Type.BYTES) {
@@ -155,7 +157,6 @@ class MainActivity: FlutterActivity() {
                         channel.invokeMethod("onTypingStatusChanged", mapOf("endpointId" to endpointId, "isTyping" to isTyping))
                     }
                 } else {
-                    println(">>> PAYLOAD RECEIVED from $endpointId")
                     runOnUiThread {
                         channel.invokeMethod("onPayloadReceived", mapOf("endpointId" to endpointId, "message" to message))
                     }

@@ -1,16 +1,8 @@
 plugins {
-    //id("com.android.application") versions 
-    //id("kotlin-android")
+    id("com.android.application")
+    id("kotlin-android")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
-    //id("dev.flutter.flutter-gradle-plugin")
-
-        id("com.android.application") version "8.3.2" apply false
-        id("org.jetbrains.kotlin.android") version "1.9.23" apply false
-        id("dev.flutter.flutter-gradle-plugin") version "1.0.0" apply false
-}
-
-apply {
-     plugin("dev.flutter.flutter-gradle-plugin")
+    id("dev.flutter.flutter-gradle-plugin")
 }
 
 android {
@@ -21,7 +13,7 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
-    }        
+    }
 
     kotlinOptions {
         jvmTarget = JavaVersion.VERSION_11.toString()
@@ -32,8 +24,7 @@ android {
         applicationId = "com.example.offgrid"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
-        // minSdkVersion flutter.minSdkVersion
-	    minSdk = flutter.minSdkVersion
+        minSdk = 23
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName

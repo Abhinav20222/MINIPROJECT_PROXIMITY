@@ -42,6 +42,7 @@ class _HomeScreenState extends State<HomeScreen> {
       Permission.bluetoothScan,
       Permission.bluetoothAdvertise,
       Permission.bluetoothConnect,
+      Permission.nearbyWifiDevices,
     ].request();
   }
 
@@ -97,7 +98,7 @@ class _HomeScreenState extends State<HomeScreen> {
         if (result['status'] == 'connected') {
           setState(() {
             _connectedEndpointId = result['endpointId'];
-            _connectedEndpointName = _discoveredEndpoints[_connectedEndpointId] ?? 'Unknown Device';
+            _connectedEndpointName = result['endpointName']; 
             _discoveredEndpoints.clear();
           });
           ScaffoldMessenger.of(context).showSnackBar(
@@ -173,6 +174,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  // --- THIS WIDGET HAS BEEN UPDATED ---
   Widget _buildConnectedView(AppState appState) {
     return Center(
       child: Column(
@@ -201,13 +203,25 @@ class _HomeScreenState extends State<HomeScreen> {
           TextButton(
             child: const Text('Disconnect'),
             onPressed: () {
+                // First, tell the service to disconnect from everyone.
                 appState.nearbyService?.stopAllEndpoints();
+                
+                // Then, immediately update the UI without waiting for the callback.
+                setState(() {
+                  _isDiscovering = false;
+                  _isAdvertising = false;
+                  _connectingToEndpointId = null;
+                  _connectedEndpointId = null;
+                  _connectedEndpointName = null;
+                  _discoveredEndpoints.clear(); // Also clear any leftover discovered devices
+                });
             },
           )
         ],
       ),
     );
   }
+  // ------------------------------------
 
   Widget _buildDiscoveryListView(AppState appState) {
     return Expanded(
@@ -238,16 +252,12 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // The _buildOnlineUI method has been removed.
-
   @override
   Widget build(BuildContext context) {
-    // The logic for checking the mode has been removed.
     final appState = Provider.of<AppState>(context);
     
     return Scaffold(
       appBar: AppBar(
-        // The title is now static.
         title: const Text('OffGrid'), 
         actions: [
           IconButton(
@@ -261,7 +271,6 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-      // The body now always shows the offline UI.
       body: _buildOfflineUI(appState),
     );
   }

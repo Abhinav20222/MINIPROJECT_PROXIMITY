@@ -12,31 +12,37 @@ class SQLiteService {
   }
 
   Future<Database> _initDB() async {
-    String path = join(await getDatabasesPath(), 'offgridtext.db');
+    String path = join(await getDatabasesPath(), 'offgrid.db');
     return await openDatabase(
       path,
-      version: 2, // <-- Version incremented from 1 to 2
+      version: 3, // <-- Incremented to version 3
       onCreate: (db, version) async {
-        // Added 'status TEXT' to the table creation
+        // Updated with all necessary columns for new installs
         await db.execute('''
           CREATE TABLE messages(
             id TEXT PRIMARY KEY,
             senderId TEXT,
             receiverId TEXT,
-            text TEXT,
             timestamp TEXT,
-            status TEXT 
+            status TEXT,
+            type TEXT,
+            text TEXT,
+            filePath TEXT,
+            fileName TEXT
           )
         ''');
       },
-      // --- This onUpgrade block is new ---
+      // Updated to handle migrations for existing installs
       onUpgrade: (db, oldVersion, newVersion) async {
         if (oldVersion < 2) {
-          // Safely adds the new column to the table if it doesn't exist
           await db.execute("ALTER TABLE messages ADD COLUMN status TEXT");
         }
+        if (oldVersion < 3) {
+          await db.execute("ALTER TABLE messages ADD COLUMN type TEXT");
+          await db.execute("ALTER TABLE messages ADD COLUMN filePath TEXT");
+          await db.execute("ALTER TABLE messages ADD COLUMN fileName TEXT");
+        }
       },
-      // ------------------------------------
     );
   }
 
