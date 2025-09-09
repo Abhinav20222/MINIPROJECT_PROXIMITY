@@ -6,10 +6,10 @@ class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
 
   @override
-  _SettingsScreenState createState() => _SettingsScreenState();
+  SettingsScreenState createState() => SettingsScreenState();
 }
 
-class _SettingsScreenState extends State<SettingsScreen> {
+class SettingsScreenState extends State<SettingsScreen> {
   late TextEditingController _usernameController;
 
   @override
@@ -31,7 +31,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Settings'),
+        title: const Text('Settings'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -39,15 +39,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
           children: [
             TextField(
               controller: _usernameController,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 labelText: 'Your Username',
                 border: OutlineInputBorder(),
               ),
               onSubmitted: (value) {
-                appState.setUsername(value);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Username updated!')),
-                );
+                if (value.isNotEmpty) {
+                    appState.setUsername(value);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Username updated!')),
+                    );
+                }
               },
             ),
           ],

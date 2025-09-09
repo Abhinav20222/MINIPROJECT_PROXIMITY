@@ -3,8 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:offgrid/models/message.dart';
 import 'package:offgrid/services/encryption_service.dart';
-import 'package:offgrid/services/nearby_service.dart';
-import 'package:offgrid/storage/sqlite_service.dart';
 import 'package:offgrid/utils/app_state.dart';
 import 'package:provider/provider.dart';
 import 'dart:convert';
@@ -13,13 +11,13 @@ class ChatScreen extends StatefulWidget {
   final String peerId;
   final String peerName;
 
-  const ChatScreen({Key? key, required this.peerId, required this.peerName}) : super(key: key);
+  const ChatScreen({super.key, required this.peerId, required this.peerName});
 
   @override
-  _ChatScreenState createState() => _ChatScreenState();
+  ChatScreenState createState() => ChatScreenState();
 }
 
-class _ChatScreenState extends State<ChatScreen> {
+class ChatScreenState extends State<ChatScreen> {
   final TextEditingController _messageController = TextEditingController();
   final List<Message> _messages = [];
   
@@ -50,8 +48,6 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   void _subscribeToServiceEvents() {
- 
-    
     appState.nearbyService?.onTypingStatusChanged = (status) {
       if (mounted && status['endpointId'] == widget.peerId) {
         setState(() {
@@ -67,9 +63,12 @@ class _ChatScreenState extends State<ChatScreen> {
       }
     };
 
+    // --- THIS IS THE CORRECTED LINE ---
     appState.nearbyService?.onDisconnected = (endpointId) {
       if(mounted && endpointId == widget.peerId) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("${widget.peerName} disconnected")));
+        if (ScaffoldMessenger.of(context).mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("${widget.peerName} disconnected")));
+        }
         Navigator.of(context).pop();
       }
     };
@@ -155,11 +154,10 @@ class _ChatScreenState extends State<ChatScreen> {
       final messageJson = jsonEncode(message.toMap());
       final packagedMessage = EncryptionService.encryptText(messageJson);
 
-      // The "if (appState.mode == AppMode.offline)" check is no longer needed here.
       appState.nearbyService?.sendMessage(widget.peerId, packagedMessage);
 
     } catch (e) {
-      print("Error in _sendMessage: $e");
+      debugPrint("Error in _sendMessage: $e");
     }
   }
 
@@ -233,7 +231,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(formattedTime, style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 10)),
+                    Text(formattedTime, style: const TextStyle(color: Colors.white70, fontSize: 10)),
                     if (isMe) const SizedBox(width: 4),
                     if (isMe) statusIcon,
                   ],

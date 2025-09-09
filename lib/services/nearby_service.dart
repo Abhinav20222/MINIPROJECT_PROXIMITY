@@ -1,14 +1,15 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'dart:async';
 
 class NearbyService {
   static const _channel = MethodChannel('com.example.offgrid/nearby');
   
-  static const String TYPING_STATUS_START = "__typing_start__";
-  static const String TYPING_STATUS_STOP = "__typing_stop__";
-  static const String READ_RECEIPT_PREFIX = "__read__";
+  // Constants updated to lowerCamelCase
+  static const String typingStatusStart = "__typing_start__";
+  static const String typingStatusStop = "__typing_stop__";
+  static const String readReceiptPrefix = "__read__";
 
-  // Callbacks are public, assignable properties
   Function(Map<String, dynamic>)? onEndpointFound;
   Function(String)? onEndpointLost;
   Function(Map<String, dynamic>)? onConnectionResult;
@@ -16,7 +17,6 @@ class NearbyService {
   Function(Map<String, dynamic>)? onPayloadReceived;
   Function(Map<String, dynamic>)? onTypingStatusChanged;
   Function(Map<String, dynamic>)? onMessageRead;
-  // --- Failure callbacks have been removed ---
 
   NearbyService() {
     _channel.setMethodCallHandler(_handleMethodCall);
@@ -45,28 +45,28 @@ class NearbyService {
       case 'onMessageRead':
         onMessageRead?.call(Map<String, dynamic>.from(call.arguments));
         break;
-      // --- Failure cases have been removed ---
       default:
-        print('Unknown method ${call.method}');
+        debugPrint('Unknown method ${call.method}');
     }
   }
   
-  // ... (The rest of the methods are unchanged)
   Future<void> sendReadReceipt(String endpointId, String messageId) async {
-    final receipt = "$READ_RECEIPT_PREFIX$messageId";
+    // Updated to use the new constant name
+    final receipt = "$readReceiptPrefix$messageId";
     try {
       await _channel.invokeMethod('sendMessage', {'endpointId': endpointId, 'message': receipt});
     } on PlatformException catch (e) {
-      print("Failed to send read receipt: '${e.message}'.");
+      debugPrint("Failed to send read receipt: '${e.message}'.");
     }
   }
 
   Future<void> sendTypingStatus(String endpointId, bool isTyping) async {
-    final status = isTyping ? TYPING_STATUS_START : TYPING_STATUS_STOP;
+    // Updated to use the new constant names
+    final status = isTyping ? typingStatusStart : typingStatusStop;
     try {
       await _channel.invokeMethod('sendMessage', {'endpointId': endpointId, 'message': status});
     } on PlatformException catch (e) {
-      print("Failed to send typing status: '${e.message}'.");
+      debugPrint("Failed to send typing status: '${e.message}'.");
     }
   }
   
@@ -74,7 +74,7 @@ class NearbyService {
     try {
       await _channel.invokeMethod('startDiscovery', {'username': username});
     } on PlatformException catch (e) {
-      print("Failed to start discovery: '${e.message}'.");
+      debugPrint("Failed to start discovery: '${e.message}'.");
     }
   }
 
@@ -82,7 +82,7 @@ class NearbyService {
     try {
       await _channel.invokeMethod('startAdvertising', {'username': username});
     } on PlatformException catch (e) {
-      print("Failed to start advertising: '${e.message}'.");
+      debugPrint("Failed to start advertising: '${e.message}'.");
     }
   }
   
@@ -90,7 +90,7 @@ class NearbyService {
     try {
       await _channel.invokeMethod('connectToEndpoint', {'endpointId': endpointId});
     } on PlatformException catch (e) {
-      print("Failed to connect: '${e.message}'.");
+      debugPrint("Failed to connect: '${e.message}'.");
     }
   }
 
@@ -98,7 +98,7 @@ class NearbyService {
     try {
       await _channel.invokeMethod('sendMessage', {'endpointId': endpointId, 'message': message});
     } on PlatformException catch (e) {
-      print("Failed to send message: '${e.message}'.");
+      debugPrint("Failed to send message: '${e.message}'.");
     }
   }
 
@@ -106,7 +106,7 @@ class NearbyService {
     try {
       await _channel.invokeMethod('stopAllEndpoints');
     } on PlatformException catch (e) {
-      print("Failed to stop all endpoints: '${e.message}'.");
+      debugPrint("Failed to stop all endpoints: '${e.message}'.");
     }
   }
 }

@@ -10,10 +10,10 @@ class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  _HomeScreenState createState() => _HomeScreenState();
+  HomeScreenState createState() => HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class HomeScreenState extends State<HomeScreen> {
   late AppState appState;
   
   final Map<String, String> _discoveredEndpoints = {};
@@ -174,7 +174,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // --- THIS WIDGET HAS BEEN UPDATED ---
   Widget _buildConnectedView(AppState appState) {
     return Center(
       child: Column(
@@ -203,17 +202,15 @@ class _HomeScreenState extends State<HomeScreen> {
           TextButton(
             child: const Text('Disconnect'),
             onPressed: () {
-                // First, tell the service to disconnect from everyone.
                 appState.nearbyService?.stopAllEndpoints();
                 
-                // Then, immediately update the UI without waiting for the callback.
                 setState(() {
                   _isDiscovering = false;
                   _isAdvertising = false;
                   _connectingToEndpointId = null;
                   _connectedEndpointId = null;
                   _connectedEndpointName = null;
-                  _discoveredEndpoints.clear(); // Also clear any leftover discovered devices
+                  _discoveredEndpoints.clear();
                 });
             },
           )
@@ -221,7 +218,6 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
-  // ------------------------------------
 
   Widget _buildDiscoveryListView(AppState appState) {
     return Expanded(
@@ -274,4 +270,4 @@ class _HomeScreenState extends State<HomeScreen> {
       body: _buildOfflineUI(appState),
     );
   }
-}
+} 
