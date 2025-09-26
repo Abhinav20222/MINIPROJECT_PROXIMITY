@@ -1,5 +1,5 @@
 // An enum to distinguish between message types
-enum MessageType { text, image, file }
+enum MessageType { text, image, file, voice }
 
 // An enum to represent the possible statuses of a message
 enum MessageStatus { sent, delivered, read }
@@ -13,9 +13,10 @@ class Message {
 
   // Properties for message type and files
   final MessageType type;
-  final String text; // For text messages
-  final String? filePath; // For file/image messages
+  final String text; // For text messages and base64 voice data
+  final String? filePath; // For file/image/voice messages
   final String? fileName; // To display the name of the file
+  final int? voiceDurationMs; // New field for voice message duration
 
   Message({
     required this.id,
@@ -27,6 +28,7 @@ class Message {
     this.text = '',
     this.filePath,
     this.fileName,
+    this.voiceDurationMs,
   });
 
   Map<String, dynamic> toMap() {
@@ -34,14 +36,13 @@ class Message {
       'id': id,
       'senderId': senderId,
       'receiverId': receiverId,
-      // --- This line has been corrected ---
       'timestamp': timestamp.toIso8601String(),
-      // ------------------------------------
       'status': status.name,
       'type': type.name,
       'text': text,
       'filePath': filePath,
       'fileName': fileName,
+      'voiceDurationMs': voiceDurationMs,
     };
   }
 
@@ -62,6 +63,34 @@ class Message {
       text: map['text'] ?? '',
       filePath: map['filePath'],
       fileName: map['fileName'],
+      voiceDurationMs: map['voiceDurationMs'],
+    );
+  }
+
+  // Helper method to create a copy with updated status
+  Message copyWith({
+    String? id,
+    String? senderId,
+    String? receiverId,
+    DateTime? timestamp,
+    MessageStatus? status,
+    MessageType? type,
+    String? text,
+    String? filePath,
+    String? fileName,
+    int? voiceDurationMs,
+  }) {
+    return Message(
+      id: id ?? this.id,
+      senderId: senderId ?? this.senderId,
+      receiverId: receiverId ?? this.receiverId,
+      timestamp: timestamp ?? this.timestamp,
+      status: status ?? this.status,
+      type: type ?? this.type,
+      text: text ?? this.text,
+      filePath: filePath ?? this.filePath,
+      fileName: fileName ?? this.fileName,
+      voiceDurationMs: voiceDurationMs ?? this.voiceDurationMs,
     );
   }
 }

@@ -15,6 +15,7 @@ pluginManagement {
         mavenCentral()
         gradlePluginPortal()
         maven("https://storage.googleapis.com/download.flutter.io")
+        maven { url = uri("https://jitpack.io") }
     }
 }
 
@@ -24,6 +25,7 @@ dependencyResolutionManagement {
         google()
         mavenCentral()
         maven("https://storage.googleapis.com/download.flutter.io")
+        maven { url = uri("https://jitpack.io") }
     }
 }
 

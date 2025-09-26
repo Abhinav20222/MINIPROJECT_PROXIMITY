@@ -9,17 +9,27 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class AppState with ChangeNotifier {
   String? _username;
-  
-  NearbyService? nearbyService;
+  String? _currentlyOpenChatPeerId;
+
+  final NearbyService nearbyService = NearbyService();
   final SQLiteService sqliteService = SQLiteService();
 
-  final StreamController<Message> _messageStreamController = StreamController.broadcast();
+  final StreamController<Message> _messageStreamController =
+      StreamController.broadcast();
   Stream<Message> get onMessageReceived => _messageStreamController.stream;
 
   String? get username => _username;
+  String? get currentlyOpenChatPeerId => _currentlyOpenChatPeerId;
+
+  void setCurrentlyOpenChat(String? peerName) {
+    print('🔵 AppState: Setting currently open chat to: $peerName');
+    _currentlyOpenChatPeerId = peerName;
+    notifyListeners();
+  }
 
   AppState() {
     _loadUsername();
+    _setupCentralMessageHandler();
   }
 
   Future<void> _loadUsername() async {
@@ -30,26 +40,33 @@ class AppState with ChangeNotifier {
       savedUsername = "User-${DateTime.now().millisecondsSinceEpoch % 1000}";
       await prefs.setString('username', savedUsername);
     }
-    
     _username = savedUsername;
     notifyListeners();
   }
 
-  void initializeNearbyService() {
-    nearbyService = NearbyService();
-    nearbyService?.onPayloadReceived = (payload) {
+  // This is the central "inbox" for all incoming messages.
+  void _setupCentralMessageHandler() {
+    nearbyService.onPayloadReceived = (payload) {
       try {
-        final decryptedMessageJson = EncryptionService.decryptText(payload['message']);
+        final decryptedMessageJson = EncryptionService.decryptText(
+          payload['message'],
+        );
         final message = Message.fromMap(jsonDecode(decryptedMessageJson));
-        
+
+        print('📨 AppState: Message received from ${message.senderId}');
+        print('📱 AppState: Currently open chat is: $_currentlyOpenChatPeerId');
+
+        // Save every valid message to the database.
         sqliteService.insertMessage(message);
+
+        // Broadcast the new message to any listening screens (like the ChatScreen).
         _messageStreamController.add(message);
       } catch (e) {
-        debugPrint("Error processing received message in AppState: $e");
+        print("Error processing received message in AppState: $e");
       }
     };
   }
-  
+
   Future<void> setUsername(String newName) async {
     _username = newName;
     final prefs = await SharedPreferences.getInstance();
