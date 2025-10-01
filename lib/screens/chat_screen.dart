@@ -212,7 +212,7 @@ class ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
         filePath: oldMessage.filePath,
         fileName: oldMessage.fileName,
         voiceDurationMs: oldMessage.voiceDurationMs,
-      );
+      );abcdrfggh
 
       appState.sqliteService.insertMessage(newMessage);
       if (mounted) {
